@@ -29,7 +29,7 @@ from langchain.output_parsers import PydanticOutputParser, OutputFixingParser
 from langchain.memory import ConversationBufferMemory
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain.tools import BaseTool, tool
-from langchain.callbacks import AsyncCallbackHandler
+from langchain_core.callbacks import AsyncCallbackHandler
 
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolExecutor
@@ -51,10 +51,12 @@ settings = get_settings()
 class CampaignGenerationRequest(BaseModel):
     """Request model for campaign generation"""
     campaign_objective: str = Field(description="Campaign objective and goals")
-    target_audience: Dict[str, Any] = Field(description="Target audience specifications")
+    target_audience: Dict[str, Any] = Field(
+        description="Target audience specifications")
     budget: float = Field(description="Campaign budget")
     channels: List[str] = Field(description="Advertising channels")
-    brand_guidelines: Optional[Dict[str, Any]] = Field(default=None, description="Brand guidelines")
+    brand_guidelines: Optional[Dict[str, Any]] = Field(
+        default=None, description="Brand guidelines")
 
 
 class CampaignGenerationResponse(BaseModel):
@@ -62,8 +64,10 @@ class CampaignGenerationResponse(BaseModel):
     campaign_name: str = Field(description="Generated campaign name")
     campaign_description: str = Field(description="Campaign description")
     ads: List[Dict[str, Any]] = Field(description="Generated ads")
-    budget_allocation: Dict[str, float] = Field(description="Budget allocation per channel")
-    optimization_suggestions: List[str] = Field(description="Optimization recommendations")
+    budget_allocation: Dict[str, float] = Field(
+        description="Budget allocation per channel")
+    optimization_suggestions: List[str] = Field(
+        description="Optimization recommendations")
 
 
 class AdOptimizationRequest(BaseModel):
@@ -78,8 +82,10 @@ class AdOptimizationResponse(BaseModel):
     """Response model for ad optimization"""
     optimized_content: str = Field(description="Optimized ad content")
     changes_made: List[str] = Field(description="List of changes made")
-    expected_improvements: Dict[str, float] = Field(description="Expected performance improvements")
-    a_b_test_suggestions: List[str] = Field(description="A/B testing recommendations")
+    expected_improvements: Dict[str, float] = Field(
+        description="Expected performance improvements")
+    a_b_test_suggestions: List[str] = Field(
+        description="A/B testing recommendations")
 
 
 # Custom LangChain Tools
@@ -107,7 +113,7 @@ def validate_brand_compliance(content: str, brand_guidelines: str) -> str:
 class LangChainCampaignService:
     """
     Comprehensive LangChain service for campaign generation and optimization
-    
+
     Features:
     - Multi-step campaign generation workflows
     - Agent-based optimization
@@ -115,28 +121,29 @@ class LangChainCampaignService:
     - LangServe deployment ready
     - Advanced prompt engineering
     """
-    
+
     def __init__(self):
         self.euri_client = None
         self.llm = None
         self.memory = ConversationBufferMemory(return_messages=True)
-        self.tools = [analyze_campaign_performance, get_competitor_insights, validate_brand_compliance]
+        self.tools = [analyze_campaign_performance,
+                      get_competitor_insights, validate_brand_compliance]
         self.tool_executor = ToolExecutor(self.tools)
-        
+
     async def _get_llm(self) -> EuriaiLangChainLLM:
         """Get or create EURI LangChain LLM"""
         if self.llm is None:
             euri_client = await get_euri_client()
             self.llm = euri_client._get_langchain_llm()
         return self.llm
-    
+
     async def generate_campaign_with_chain(
         self,
         request: CampaignGenerationRequest
     ) -> CampaignGenerationResponse:
         """
         Generate complete campaign using LangChain sequential chains
-        
+
         This implements the complex workflow from HLD:
         1. Campaign strategy generation
         2. Ad content creation
@@ -144,7 +151,7 @@ class LangChainCampaignService:
         4. Performance prediction
         """
         llm = await self._get_llm()
-        
+
         # Step 1: Campaign Strategy Chain
         strategy_prompt = PromptTemplate(
             input_variables=["objective", "audience", "budget", "channels"],
@@ -166,13 +173,13 @@ class LangChainCampaignService:
             Strategy:
             """
         )
-        
+
         strategy_chain = LLMChain(
             llm=llm,
             prompt=strategy_prompt,
             output_key="strategy"
         )
-        
+
         # Step 2: Content Generation Chain
         content_prompt = PromptTemplate(
             input_variables=["strategy", "channels", "audience"],
@@ -192,13 +199,13 @@ class LangChainCampaignService:
             Ad Content:
             """
         )
-        
+
         content_chain = LLMChain(
             llm=llm,
             prompt=content_prompt,
             output_key="content"
         )
-        
+
         # Step 3: Budget Allocation Chain
         budget_prompt = PromptTemplate(
             input_variables=["strategy", "content", "budget", "channels"],
@@ -219,13 +226,13 @@ class LangChainCampaignService:
             Budget Allocation:
             """
         )
-        
+
         budget_chain = LLMChain(
             llm=llm,
             prompt=budget_prompt,
             output_key="budget_allocation"
         )
-        
+
         # Step 4: Optimization Chain
         optimization_prompt = PromptTemplate(
             input_variables=["strategy", "content", "budget_allocation"],
@@ -244,21 +251,23 @@ class LangChainCampaignService:
             Optimization Plan:
             """
         )
-        
+
         optimization_chain = LLMChain(
             llm=llm,
             prompt=optimization_prompt,
             output_key="optimization"
         )
-        
+
         # Create Sequential Chain
         overall_chain = SequentialChain(
-            chains=[strategy_chain, content_chain, budget_chain, optimization_chain],
+            chains=[strategy_chain, content_chain,
+                    budget_chain, optimization_chain],
             input_variables=["objective", "audience", "budget", "channels"],
-            output_variables=["strategy", "content", "budget_allocation", "optimization"],
+            output_variables=["strategy", "content",
+                              "budget_allocation", "optimization"],
             verbose=True
         )
-        
+
         # Execute the chain
         try:
             result = await overall_chain.arun(
@@ -267,28 +276,28 @@ class LangChainCampaignService:
                 budget=request.budget,
                 channels=", ".join(request.channels)
             )
-            
+
             # Parse and structure the response
             return self._parse_campaign_response(result, request)
-            
+
         except Exception as e:
             logger.error(f"Campaign generation chain failed: {e}")
             raise
-    
+
     async def optimize_ad_with_agent(
         self,
         request: AdOptimizationRequest
     ) -> AdOptimizationResponse:
         """
         Optimize ad using LangChain agent with tools
-        
+
         This implements agent-based optimization with:
         - Performance analysis tools
         - Competitor research
         - Brand compliance checking
         """
         llm = await self._get_llm()
-        
+
         # Create agent prompt
         agent_prompt = ChatPromptTemplate.from_messages([
             SystemMessage(content="""
@@ -310,11 +319,12 @@ class LangChainCampaignService:
             Use tools to gather insights and provide optimized version.
             """)
         ])
-        
+
         # Create agent
         agent = create_openai_functions_agent(llm, self.tools, agent_prompt)
-        agent_executor = AgentExecutor(agent=agent, tools=self.tools, verbose=True)
-        
+        agent_executor = AgentExecutor(
+            agent=agent, tools=self.tools, verbose=True)
+
         try:
             result = await agent_executor.arun(
                 ad_content=request.ad_content,
@@ -322,13 +332,13 @@ class LangChainCampaignService:
                 performance_data=str(request.performance_data),
                 goals=", ".join(request.goals)
             )
-            
+
             return self._parse_optimization_response(result, request)
-            
+
         except Exception as e:
             logger.error(f"Ad optimization agent failed: {e}")
             raise
-    
+
     def _parse_campaign_response(
         self,
         result: Dict[str, str],
@@ -359,7 +369,7 @@ class LangChainCampaignService:
                 "Optimize for mobile"
             ]
         )
-    
+
     def _parse_optimization_response(
         self,
         result: str,
@@ -369,9 +379,11 @@ class LangChainCampaignService:
         # This would implement sophisticated parsing
         return AdOptimizationResponse(
             optimized_content=f"Optimized version of: {request.ad_content[:50]}...",
-            changes_made=["Improved headline", "Enhanced CTA", "Better targeting"],
+            changes_made=["Improved headline",
+                          "Enhanced CTA", "Better targeting"],
             expected_improvements={"ctr": 0.15, "conversion_rate": 0.08},
-            a_b_test_suggestions=["Test different headlines", "Try various CTAs"]
+            a_b_test_suggestions=[
+                "Test different headlines", "Try various CTAs"]
         )
 
 
@@ -407,18 +419,19 @@ class LangGraphCampaignWorkflow:
         self.llm = None
         self.workflow = None
         self.memory = MemorySaver()
-        self.tools = [analyze_campaign_performance, get_competitor_insights, validate_brand_compliance]
+        self.tools = [analyze_campaign_performance,
+                      get_competitor_insights, validate_brand_compliance]
         self.tool_executor = ToolExecutor(self.tools)
         self.max_retries = 3
         self.parallel_processing = True
-        
+
     async def _get_llm(self) -> EuriaiLangChainLLM:
         """Get EURI LangChain LLM"""
         if self.llm is None:
             euri_client = await get_euri_client()
             self.llm = euri_client._get_langchain_llm()
         return self.llm
-    
+
     def create_workflow(self) -> StateGraph:
         """Create advanced LangGraph workflow for campaign generation"""
         workflow = StateGraph(CampaignState)
@@ -436,7 +449,7 @@ class LangGraphCampaignWorkflow:
         workflow.add_node("human_review", self.human_review)
         workflow.add_node("error_recovery", self.error_recovery)
         workflow.add_node("parallel_content", self.parallel_content_generation)
-        
+
         # Add edges for advanced workflow
         workflow.set_entry_point("generate_strategy")
 
@@ -472,13 +485,13 @@ class LangGraphCampaignWorkflow:
                 "complete": END
             }
         )
-        
+
         return workflow.compile(checkpointer=self.memory)
-    
+
     async def generate_strategy(self, state: CampaignState) -> CampaignState:
         """Generate campaign strategy"""
         llm = await self._get_llm()
-        
+
         prompt = f"""
         Generate a comprehensive campaign strategy for:
         Objective: {state.objective}
@@ -486,17 +499,17 @@ class LangGraphCampaignWorkflow:
         Budget: ${state.budget}
         Channels: {state.channels}
         """
-        
+
         strategy = await llm.agenerate([prompt])
         state.strategy = strategy.generations[0][0].text
         state.current_step = "strategy_complete"
-        
+
         return state
-    
+
     async def create_content(self, state: CampaignState) -> CampaignState:
         """Create ad content for all channels"""
         llm = await self._get_llm()
-        
+
         ads = []
         for channel in state.channels:
             prompt = f"""
@@ -507,13 +520,13 @@ class LangGraphCampaignWorkflow:
             - Call to action
             - Visual description
             """
-            
+
             content = await llm.agenerate([prompt])
             ads.append({
                 "channel": channel,
                 "content": content.generations[0][0].text
             })
-        
+
         state.ads = ads
         state.current_step = "content_complete"
 
@@ -551,7 +564,8 @@ class LangGraphCampaignWorkflow:
                 return state
 
             validation_results = []
-            brand_guidelines = getattr(state, 'brand_guidelines', "Standard brand guidelines")
+            brand_guidelines = getattr(
+                state, 'brand_guidelines', "Standard brand guidelines")
 
             for ad in state.ads:
                 content = ad.get("content", "")
@@ -601,13 +615,15 @@ class LangGraphCampaignWorkflow:
                 quality_score += 25
             total_checks += 25
 
-            approval_score = (quality_score / total_checks) * 100 if total_checks > 0 else 0
+            approval_score = (quality_score / total_checks) * \
+                100 if total_checks > 0 else 0
 
             state.human_review_score = approval_score
             state.human_approved = approval_score >= 70  # 70% threshold
             state.current_step = "human_review_complete"
 
-            logger.info(f"Human review completed with score: {approval_score}%")
+            logger.info(
+                f"Human review completed with score: {approval_score}%")
 
             return state
 
@@ -679,21 +695,24 @@ class LangGraphCampaignWorkflow:
                 }
 
             # Execute content generation in parallel
-            tasks = [generate_channel_content(channel) for channel in state.channels]
+            tasks = [generate_channel_content(channel)
+                     for channel in state.channels]
             ads = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Filter out exceptions and log errors
             valid_ads = []
             for i, ad in enumerate(ads):
                 if isinstance(ad, Exception):
-                    logger.error(f"Failed to generate content for channel {state.channels[i]}: {ad}")
+                    logger.error(
+                        f"Failed to generate content for channel {state.channels[i]}: {ad}")
                 else:
                     valid_ads.append(ad)
 
             state.ads = valid_ads
             state.current_step = "parallel_content_complete"
 
-            logger.info(f"Parallel content generation completed for {len(valid_ads)} channels")
+            logger.info(
+                f"Parallel content generation completed for {len(valid_ads)} channels")
 
             return state
 
@@ -701,7 +720,7 @@ class LangGraphCampaignWorkflow:
             logger.error(f"Parallel content generation failed: {e}")
             # Fall back to sequential processing
             return await self.create_content(state)
-    
+
     async def allocate_budget(self, state: CampaignState) -> CampaignState:
         """Allocate budget across channels"""
         # Implement budget allocation logic
@@ -709,35 +728,35 @@ class LangGraphCampaignWorkflow:
             channel: state.budget / len(state.channels)
             for channel in state.channels
         }
-        
+
         state.budget_allocation = allocation
         state.current_step = "budget_complete"
-        
+
         return state
-    
+
     async def optimize_campaign(self, state: CampaignState) -> CampaignState:
         """Generate optimization recommendations"""
         llm = await self._get_llm()
-        
+
         prompt = f"""
         Provide optimization recommendations for:
         Strategy: {state.strategy}
         Ads: {state.ads}
         Budget: {state.budget_allocation}
         """
-        
+
         optimization = await llm.agenerate([prompt])
         state.optimization = [optimization.generations[0][0].text]
         state.current_step = "optimization_complete"
-        
+
         return state
-    
+
     async def validate_output(self, state: CampaignState) -> CampaignState:
         """Validate generated campaign"""
         # Implement validation logic
         state.current_step = "validation_complete"
         return state
-    
+
     def should_proceed_after_review(self, state: CampaignState) -> str:
         """Determine next step after human review"""
         try:
@@ -756,7 +775,8 @@ class LangGraphCampaignWorkflow:
             # Check if we have all required components
             has_strategy = bool(state.strategy)
             has_ads = bool(state.ads and len(state.ads) > 0)
-            has_budget = bool(hasattr(state, 'budget_allocation') and state.budget_allocation)
+            has_budget = bool(hasattr(state, 'budget_allocation')
+                              and state.budget_allocation)
 
             # Check retry count
             retry_count = getattr(state, 'retry_count', 0)
@@ -767,7 +787,8 @@ class LangGraphCampaignWorkflow:
                 state.retry_count = retry_count + 1
                 return "retry"
             else:
-                logger.warning("Max retries reached, completing with partial results")
+                logger.warning(
+                    "Max retries reached, completing with partial results")
                 return "complete"
 
         except Exception as e:
@@ -783,18 +804,18 @@ _langgraph_workflow: Optional[LangGraphCampaignWorkflow] = None
 async def get_langchain_service() -> LangChainCampaignService:
     """Get or create LangChain service instance"""
     global _langchain_service
-    
+
     if _langchain_service is None:
         _langchain_service = LangChainCampaignService()
-    
+
     return _langchain_service
 
 
 async def get_langgraph_workflow() -> LangGraphCampaignWorkflow:
     """Get or create LangGraph workflow instance"""
     global _langgraph_workflow
-    
+
     if _langgraph_workflow is None:
         _langgraph_workflow = LangGraphCampaignWorkflow()
-    
+
     return _langgraph_workflow

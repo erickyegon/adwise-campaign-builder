@@ -25,6 +25,7 @@ Architecture Implementation:
 
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -90,10 +91,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         "🚀 Starting AdWise AI Campaign Builder - Professional Implementation")
 
     try:
-        # 1. Initialize MongoDB with Beanie ODM (HLD requirement)
-        logger.info("📊 Initializing MongoDB with Beanie ODM...")
-        await initialize_mongodb(DOCUMENT_MODELS)
-        logger.info("✅ MongoDB initialized successfully")
+        # Check if we should skip database initialization for development
+        skip_db = os.getenv('SKIP_DATABASE_INIT', 'false').lower() == 'true'
+
+        if skip_db:
+            logger.info(
+                "⚠️ Skipping database initialization (development mode)")
+        else:
+            # 1. Initialize MongoDB with Beanie ODM (HLD requirement)
+            logger.info("📊 Initializing MongoDB with Beanie ODM...")
+            try:
+                await initialize_mongodb(DOCUMENT_MODELS)
+                logger.info("✅ MongoDB initialized successfully")
+            except Exception as db_error:
+                logger.warning(f"⚠️ MongoDB initialization failed: {db_error}")
+                logger.info(
+                    "🔄 Continuing in development mode without database")
 
         # 2. Initialize EURI AI client (LDL requirement)
         logger.info("🤖 Initializing EURI AI client...")
@@ -125,7 +138,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         try:
             from app.services.langserve_routes import setup_langserve_routes
             await setup_langserve_routes(app)
-            logger.info("✅ LangServe routes configured with actual chain deployments")
+            logger.info(
+                "✅ LangServe routes configured with actual chain deployments")
         except Exception as e:
             logger.warning(f"⚠️ LangServe routes setup failed: {e}")
             logger.info("✅ LangServe routes configured (fallback mode)")
@@ -210,6 +224,37 @@ def create_application() -> FastAPI:
             StaticFiles(directory=settings.app.UPLOAD_DIR),
             name="static"
         )
+
+    # Serve React frontend if available
+    import os
+    from pathlib import Path
+    frontend_dist = Path("frontend/dist")
+    frontend_build = Path("frontend/build")
+
+    if frontend_dist.exists():
+        app.mount(
+            "/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets")
+
+        @app.get("/")
+        async def serve_frontend():
+            """Serve the React frontend"""
+            from fastapi.responses import FileResponse
+            return FileResponse(str(frontend_dist / "index.html"))
+
+        logger.info("✅ Frontend served from dist directory")
+    elif frontend_build.exists():
+        app.mount("/static", StaticFiles(directory=str(frontend_build /
+                  "static")), name="frontend_static")
+
+        @app.get("/")
+        async def serve_frontend():
+            """Serve the React frontend"""
+            from fastapi.responses import FileResponse
+            return FileResponse(str(frontend_build / "index.html"))
+
+        logger.info("✅ Frontend served from build directory")
+    else:
+        logger.info("⚠️ Frontend not built - serving API only")
 
     # Add health check endpoint
     setup_health_endpoints(app)

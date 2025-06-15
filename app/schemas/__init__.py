@@ -1,5 +1,5 @@
 # Schemas package for AdWise AI Digital Marketing Campaign Builder
-# 
+#
 # Complete Pydantic schemas implementing ALL HLD/LDL/PRM requirements:
 # - Authentication schemas (JWT, role-based access)
 # - Campaign management schemas
@@ -10,36 +10,37 @@
 # - User management schemas
 
 from .auth import *
-from .campaigns import *
-from .analytics import *
 from .ai import *
-from .teams import *
-from .reports import *
-from .collaboration import *
-from .users import *
+# TODO: Create missing schema modules
+# from .campaigns import *
+# from .analytics import *
+# from .teams import *
+# from .reports import *
+# from .collaboration import *
+# from .users import *
 
 __all__ = [
     # Authentication
     "LoginRequest",
-    "LoginResponse", 
+    "LoginResponse",
     "RegisterRequest",
     "TokenResponse",
     "UserResponse",
     "PasswordChangeRequest",
-    
+
     # Campaigns
     "CampaignCreateRequest",
-    "CampaignUpdateRequest", 
+    "CampaignUpdateRequest",
     "CampaignResponse",
     "CampaignListResponse",
     "AdCreateRequest",
     "AdUpdateRequest",
     "AdResponse",
-    
+
     # AI Services
     "ContentGenerationRequest",
     "ContentGenerationResponse",
-    "VisualGenerationRequest", 
+    "VisualGenerationRequest",
     "VisualGenerationResponse",
     "CampaignOptimizationRequest",
     "CampaignOptimizationResponse",
@@ -47,28 +48,28 @@ __all__ = [
     "PerformanceAnalysisResponse",
     "BatchContentRequest",
     "BatchContentResponse",
-    
+
     # Analytics
     "AnalyticsCreateRequest",
     "AnalyticsResponse",
     "PerformanceSummaryResponse",
     "MetricsResponse",
-    
+
     # Teams
     "TeamCreateRequest",
     "TeamUpdateRequest",
     "TeamResponse",
     "TeamMemberRequest",
-    
+
     # Reports
     "ReportGenerationRequest",
     "ReportResponse",
     "ExportRequest",
-    
+
     # Collaboration
     "CollaborationEventRequest",
     "CollaborationStateResponse",
-    
+
     # Users
     "UserCreateRequest",
     "UserUpdateRequest",

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdWise AI Campaign Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-rocket text-2xl"></i>
+                    <h1 class="text-2xl font-bold">AdWise AI Campaign Builder</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="bg-green-500 px-3 py-1 rounded-full text-sm">Live</span>
+                    <button onclick="checkHealth()" class="bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded">
+                        <i class="fas fa-heartbeat mr-2"></i>Health Check
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Status Dashboard -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <i class="fas fa-server text-blue-500 text-2xl mr-4"></i>
+                    <div>
+                        <h3 class="text-lg font-semibold">System Status</h3>
+                        <p id="system-status" class="text-green-600">Operational</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <i class="fas fa-brain text-purple-500 text-2xl mr-4"></i>
+                    <div>
+                        <h3 class="text-lg font-semibold">AI Services</h3>
+                        <p id="ai-status" class="text-green-600">Ready</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <i class="fas fa-link text-orange-500 text-2xl mr-4"></i>
+                    <div>
+                        <h3 class="text-lg font-semibold">LangChain</h3>
+                        <p id="langchain-status" class="text-green-600">Active</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Sections -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Campaign Management -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-bullhorn text-blue-500 mr-3"></i>
+                    Campaign Management
+                </h2>
+                <div class="space-y-4">
+                    <button onclick="createCampaign()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg transition duration-200">
+                        <i class="fas fa-plus mr-2"></i>Create New Campaign
+                    </button>
+                    <button onclick="viewCampaigns()" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition duration-200">
+                        <i class="fas fa-list mr-2"></i>View All Campaigns
+                    </button>
+                    <button onclick="openApiDocs()" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg transition duration-200">
+                        <i class="fas fa-book mr-2"></i>API Documentation
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Content Generation -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-magic text-purple-500 mr-3"></i>
+                    AI Content Generation
+                </h2>
+                <div class="space-y-4">
+                    <button onclick="testLangChain()" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 px-4 rounded-lg transition duration-200">
+                        <i class="fas fa-robot mr-2"></i>Test LangChain AI
+                    </button>
+                    <button onclick="generateContent()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-3 px-4 rounded-lg transition duration-200">
+                        <i class="fas fa-pen-fancy mr-2"></i>Generate Ad Copy
+                    </button>
+                    <button onclick="optimizeCampaign()" class="w-full bg-pink-500 hover:bg-pink-600 text-white py-3 px-4 rounded-lg transition duration-200">
+                        <i class="fas fa-chart-line mr-2"></i>Optimize Campaign
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Area -->
+        <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-terminal text-gray-500 mr-3"></i>
+                Results & Output
+            </h2>
+            <div id="results" class="bg-gray-100 p-4 rounded-lg min-h-32 font-mono text-sm overflow-auto">
+                Welcome to AdWise AI Campaign Builder! Click any button above to get started.
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="/docs" target="_blank" class="bg-blue-100 hover:bg-blue-200 p-4 rounded-lg text-center transition duration-200">
+                <i class="fas fa-book text-blue-500 text-2xl mb-2"></i>
+                <p class="text-blue-700 font-semibold">API Docs</p>
+            </a>
+            <a href="/health" target="_blank" class="bg-green-100 hover:bg-green-200 p-4 rounded-lg text-center transition duration-200">
+                <i class="fas fa-heartbeat text-green-500 text-2xl mb-2"></i>
+                <p class="text-green-700 font-semibold">Health Check</p>
+            </a>
+            <a href="/redoc" target="_blank" class="bg-purple-100 hover:bg-purple-200 p-4 rounded-lg text-center transition duration-200">
+                <i class="fas fa-file-alt text-purple-500 text-2xl mb-2"></i>
+                <p class="text-purple-700 font-semibold">ReDoc</p>
+            </a>
+            <a href="/openapi.json" target="_blank" class="bg-orange-100 hover:bg-orange-200 p-4 rounded-lg text-center transition duration-200">
+                <i class="fas fa-code text-orange-500 text-2xl mb-2"></i>
+                <p class="text-orange-700 font-semibold">OpenAPI</p>
+            </a>
+        </div>
+    </main>
+
+    <script>
+        // API Base URL
+        const API_BASE = 'http://127.0.0.1:8008';
+
+        // Utility function to display results
+        function displayResult(data, title = 'Result') {
+            const resultsDiv = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            resultsDiv.innerHTML = `
+                <div class="mb-4">
+                    <h3 class="font-bold text-lg text-blue-600">${title} (${timestamp})</h3>
+                    <pre class="mt-2 whitespace-pre-wrap">${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        // Health Check
+        async function checkHealth() {
+            try {
+                const response = await axios.get(`${API_BASE}/health`);
+                displayResult(response.data, 'Health Check');
+                document.getElementById('system-status').textContent = 'Healthy';
+                document.getElementById('system-status').className = 'text-green-600';
+            } catch (error) {
+                displayResult({error: error.message}, 'Health Check Error');
+                document.getElementById('system-status').textContent = 'Error';
+                document.getElementById('system-status').className = 'text-red-600';
+            }
+        }
+
+        // Test LangChain
+        async function testLangChain() {
+            try {
+                const response = await axios.get(`${API_BASE}/api/v1/langchain/test`);
+                displayResult(response.data, 'LangChain Test');
+                document.getElementById('langchain-status').textContent = 'Working';
+                document.getElementById('langchain-status').className = 'text-green-600';
+            } catch (error) {
+                displayResult({error: error.message}, 'LangChain Test Error');
+                document.getElementById('langchain-status').textContent = 'Error';
+                document.getElementById('langchain-status').className = 'text-red-600';
+            }
+        }
+
+        // Create Campaign (placeholder)
+        function createCampaign() {
+            displayResult({
+                message: "Campaign creation feature",
+                note: "This would connect to the campaign creation API",
+                api_endpoint: "/api/v1/campaigns",
+                status: "Feature available in full API"
+            }, 'Create Campaign');
+        }
+
+        // View Campaigns (placeholder)
+        function viewCampaigns() {
+            displayResult({
+                message: "Campaign listing feature",
+                note: "This would fetch all campaigns from the database",
+                api_endpoint: "/api/v1/campaigns",
+                status: "Feature available in full API"
+            }, 'View Campaigns');
+        }
+
+        // Generate Content (placeholder)
+        function generateContent() {
+            displayResult({
+                message: "AI content generation feature",
+                note: "This would use EURI AI and LangChain for content generation",
+                api_endpoint: "/api/v1/ai/generate-content",
+                status: "AI services ready"
+            }, 'Generate Content');
+        }
+
+        // Optimize Campaign (placeholder)
+        function optimizeCampaign() {
+            displayResult({
+                message: "Campaign optimization feature",
+                note: "This would use AI to optimize campaign performance",
+                api_endpoint: "/api/v1/ai/optimize-campaign",
+                status: "AI optimization ready"
+            }, 'Optimize Campaign');
+        }
+
+        // Open API Documentation
+        function openApiDocs() {
+            window.open(`${API_BASE}/docs`, '_blank');
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkHealth();
+            setTimeout(testLangChain, 1000);
+        });
+    </script>
+</body>
+</html>

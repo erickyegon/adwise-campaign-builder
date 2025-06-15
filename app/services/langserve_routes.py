@@ -30,7 +30,7 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain.tools import BaseTool, tool
-from langchain.callbacks import AsyncCallbackHandler, StreamingStdOutCallbackHandler
+from langchain_core.callbacks import AsyncCallbackHandler, StreamingStdOutCallbackHandler
 from langchain.schema.runnable import Runnable, RunnablePassthrough
 from langchain.schema.output_parser import StrOutputParser
 
@@ -60,7 +60,8 @@ settings = get_settings()
 class CampaignGenerationInput(BaseModel):
     """Input for campaign generation chain"""
     objective: str = Field(description="Campaign objective and goals")
-    target_audience: Dict[str, Any] = Field(description="Target audience specifications")
+    target_audience: Dict[str, Any] = Field(
+        description="Target audience specifications")
     budget: float = Field(description="Campaign budget")
     channels: List[str] = Field(description="Advertising channels")
     brand_guidelines: Optional[Dict[str, Any]] = Field(default=None)
@@ -72,7 +73,8 @@ class ContentOptimizationInput(BaseModel):
     content: str = Field(description="Content to optimize")
     channel: str = Field(description="Target channel")
     audience: Dict[str, Any] = Field(description="Target audience")
-    optimization_goals: List[str] = Field(description="Optimization objectives")
+    optimization_goals: List[str] = Field(
+        description="Optimization objectives")
 
 
 class ConversationInput(BaseModel):
@@ -89,10 +91,10 @@ async def analyze_campaign_metrics(campaign_data: str) -> str:
     try:
         # This would integrate with actual analytics service
         logger.info(f"Analyzing campaign metrics: {campaign_data[:100]}...")
-        
+
         # Simulate analysis
         await asyncio.sleep(0.5)
-        
+
         return """
         Campaign Analysis Results:
         - CTR: 2.3% (Above industry average)
@@ -111,10 +113,10 @@ async def get_competitor_insights(industry: str, region: str = "global") -> str:
     """Get competitor insights for the specified industry and region"""
     try:
         logger.info(f"Fetching competitor insights for {industry} in {region}")
-        
+
         # Simulate competitor analysis
         await asyncio.sleep(0.3)
-        
+
         return f"""
         Competitor Insights for {industry}:
         - Average CPC: $1.25-$2.80
@@ -133,10 +135,10 @@ async def validate_brand_compliance(content: str, brand_guidelines: str) -> str:
     """Validate content against brand guidelines"""
     try:
         logger.info("Validating brand compliance...")
-        
+
         # Simulate brand validation
         await asyncio.sleep(0.2)
-        
+
         return """
         Brand Compliance Check:
         ✅ Tone of voice: Consistent with brand guidelines
@@ -152,10 +154,10 @@ async def validate_brand_compliance(content: str, brand_guidelines: str) -> str:
 
 class StreamingCallbackHandler(AsyncCallbackHandler):
     """Custom callback handler for streaming responses"""
-    
+
     def __init__(self):
         self.tokens = []
-        
+
     async def on_llm_new_token(self, token: str, **kwargs) -> None:
         """Handle new token from LLM"""
         self.tokens.append(token)
@@ -167,7 +169,7 @@ async def create_campaign_generation_chain() -> Runnable:
     try:
         euri_client = await get_euri_client()
         llm = euri_client._get_langchain_llm()
-        
+
         # Enhanced prompt template with few-shot examples
         prompt = ChatPromptTemplate.from_messages([
             ("system", """You are an expert digital marketing strategist specializing in AI-powered campaign generation.
@@ -202,12 +204,12 @@ async def create_campaign_generation_chain() -> Runnable:
             5. Optimization suggestions
             """)
         ])
-        
+
         # Create chain with output parser
         chain = prompt | llm | StrOutputParser()
-        
+
         return chain
-        
+
     except Exception as e:
         logger.error(f"Failed to create campaign generation chain: {e}")
         raise
@@ -218,11 +220,12 @@ async def create_content_optimization_chain() -> Runnable:
     try:
         euri_client = await get_euri_client()
         llm = euri_client._get_langchain_llm()
-        
+
         # Tools for optimization
-        tools = [analyze_campaign_metrics, get_competitor_insights, validate_brand_compliance]
+        tools = [analyze_campaign_metrics,
+                 get_competitor_insights, validate_brand_compliance]
         tool_executor = ToolExecutor(tools)
-        
+
         prompt = ChatPromptTemplate.from_messages([
             ("system", """You are a content optimization specialist with access to analytics tools.
             
@@ -243,11 +246,11 @@ async def create_content_optimization_chain() -> Runnable:
             Please analyze and optimize this content using available tools.
             """)
         ])
-        
+
         chain = prompt | llm | StrOutputParser()
-        
+
         return chain
-        
+
     except Exception as e:
         logger.error(f"Failed to create content optimization chain: {e}")
         raise
@@ -258,14 +261,14 @@ async def create_conversational_chain() -> Runnable:
     try:
         euri_client = await get_euri_client()
         llm = euri_client._get_langchain_llm()
-        
+
         # Memory for conversation history
         memory = ConversationBufferWindowMemory(
             k=10,  # Keep last 10 exchanges
             return_messages=True,
             memory_key="chat_history"
         )
-        
+
         prompt = ChatPromptTemplate.from_messages([
             ("system", """You are AdWise AI, an intelligent digital marketing assistant.
             
@@ -283,16 +286,16 @@ async def create_conversational_chain() -> Runnable:
             MessagesPlaceholder(variable_name="chat_history"),
             ("human", "{message}")
         ])
-        
+
         chain = ConversationChain(
             llm=llm,
             prompt=prompt,
             memory=memory,
             verbose=True
         )
-        
+
         return chain
-        
+
     except Exception as e:
         logger.error(f"Failed to create conversational chain: {e}")
         raise
@@ -303,15 +306,15 @@ async def setup_langserve_routes(app: FastAPI) -> None:
     if not LANGSERVE_AVAILABLE:
         logger.warning("LangServe not available, skipping route setup")
         return
-        
+
     try:
         logger.info("Setting up LangServe routes...")
-        
+
         # Create chains
         campaign_chain = await create_campaign_generation_chain()
         optimization_chain = await create_content_optimization_chain()
         conversation_chain = await create_conversational_chain()
-        
+
         # Add routes for each chain
         add_routes(
             app,
@@ -320,7 +323,7 @@ async def setup_langserve_routes(app: FastAPI) -> None:
             input_type=CampaignGenerationInput,
             config_keys=["configurable"]
         )
-        
+
         add_routes(
             app,
             optimization_chain,
@@ -328,7 +331,7 @@ async def setup_langserve_routes(app: FastAPI) -> None:
             input_type=ContentOptimizationInput,
             config_keys=["configurable"]
         )
-        
+
         add_routes(
             app,
             conversation_chain,
@@ -336,7 +339,7 @@ async def setup_langserve_routes(app: FastAPI) -> None:
             input_type=ConversationInput,
             config_keys=["configurable"]
         )
-        
+
         logger.info("✅ LangServe routes successfully configured")
         logger.info("Available LangServe endpoints:")
         logger.info("  • POST /langserve/campaign-generation/invoke")
@@ -345,7 +348,7 @@ async def setup_langserve_routes(app: FastAPI) -> None:
         logger.info("  • POST /langserve/content-optimization/stream")
         logger.info("  • POST /langserve/conversation/invoke")
         logger.info("  • POST /langserve/conversation/stream")
-        
+
     except Exception as e:
         logger.error(f"Failed to setup LangServe routes: {e}")
         raise
