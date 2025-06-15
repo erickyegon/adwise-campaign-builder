@@ -1,0 +1,101 @@
+# AdWise AI Digital Marketing Campaign Builder - Minimal Development Environment
+# Essential services only for quick setup
+
+services:
+  # =============================================================================
+  # ESSENTIAL DATABASE SERVICES
+  # =============================================================================
+  
+  # MongoDB - Primary Database
+  mongodb:
+    image: mongo:7.0
+    container_name: adwise_mongodb_minimal
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin_password_2024
+      MONGO_INITDB_DATABASE: adwise_campaigns
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - adwise_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis - Caching & Session Storage
+  redis:
+    image: redis:7-alpine
+    container_name: adwise_redis_minimal
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - adwise_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # =============================================================================
+  # OPTIONAL ADMIN TOOLS (comment out if having connectivity issues)
+  # =============================================================================
+
+  # Mongo Express - MongoDB Administration
+  mongo-express:
+    image: mongo-express:latest
+    container_name: adwise_mongo_express_minimal
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin_password_2024
+      ME_CONFIG_MONGODB_URL: mongodb://admin:admin_password_2024@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin_password_2024
+    ports:
+      - "8081:8081"
+    networks:
+      - adwise_network
+    depends_on:
+      - mongodb
+
+  # Redis Commander - Redis Administration
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: adwise_redis_commander_minimal
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379
+      HTTP_USER: admin
+      HTTP_PASSWORD: admin_password_2024
+    ports:
+      - "8082:8081"
+    networks:
+      - adwise_network
+    depends_on:
+      - redis
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  adwise_network:
+    driver: bridge
+    name: adwise_minimal_network
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  mongodb_data:
+    name: adwise_mongodb_data_minimal
+  redis_data:
+    name: adwise_redis_data_minimal

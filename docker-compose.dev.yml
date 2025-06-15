@@ -1,0 +1,265 @@
+# AdWise AI Digital Marketing Campaign Builder - Development Environment
+# Comprehensive Docker Compose setup for local development
+
+services:
+  # =============================================================================
+  # DATABASE SERVICES
+  # =============================================================================
+  
+  # PostgreSQL - Primary Database
+  postgres:
+    image: postgres:15
+    container_name: adwise_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: adwise_campaigns
+      POSTGRES_USER: adwise_user
+      POSTGRES_PASSWORD: adwise_dev_password_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - adwise_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adwise_user -d adwise_campaigns"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB - Document Storage
+  mongodb:
+    image: mongo:7.0
+    container_name: adwise_mongodb_dev
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin_password_2024
+      MONGO_INITDB_DATABASE: adwise_campaigns
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - adwise_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Caching & Session Storage
+  redis:
+    image: redis:7-alpine
+    container_name: adwise_redis_dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - adwise_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================================================
+  # DEVELOPMENT TOOLS
+  # =============================================================================
+
+  # pgAdmin - PostgreSQL Administration
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: adwise_pgadmin_dev
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@adwise.ai
+      PGADMIN_DEFAULT_PASSWORD: admin_password_2024
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - adwise_network
+    depends_on:
+      - postgres
+
+  # Mongo Express - MongoDB Administration
+  mongo-express:
+    image: mongo-express:latest
+    container_name: adwise_mongo_express_dev
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin_password_2024
+      ME_CONFIG_MONGODB_URL: mongodb://admin:admin_password_2024@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin_password_2024
+    ports:
+      - "8081:8081"
+    networks:
+      - adwise_network
+    depends_on:
+      - mongodb
+
+  # Redis Commander - Redis Administration
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: adwise_redis_commander_dev
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379
+      HTTP_USER: admin
+      HTTP_PASSWORD: admin_password_2024
+    ports:
+      - "8082:8081"
+    networks:
+      - adwise_network
+    depends_on:
+      - redis
+
+  # =============================================================================
+  # MONITORING & OBSERVABILITY
+  # =============================================================================
+
+  # Prometheus - Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: adwise_prometheus_dev
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - adwise_prometheus_config_dev:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - adwise_network
+
+  # Grafana - Metrics Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: adwise_grafana_dev
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin_password_2024
+      GF_USERS_ALLOW_SIGN_UP: false
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - adwise_grafana_config_dev:/etc/grafana/provisioning
+    networks:
+      - adwise_network
+    depends_on:
+      - prometheus
+
+  # =============================================================================
+  # MESSAGE QUEUE & BACKGROUND TASKS
+  # =============================================================================
+
+  # RabbitMQ - Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: adwise_rabbitmq_dev
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin_password_2024
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - adwise_network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================================================
+  # DEVELOPMENT UTILITIES
+  # =============================================================================
+
+  # Mailhog - Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: adwise_mailhog_dev
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI
+    networks:
+      - adwise_network
+
+  # MinIO - S3-compatible Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: adwise_minio_dev
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin_password_2024
+    ports:
+      - "9000:9000"   # API port
+      - "9001:9001"   # Console port
+    volumes:
+      - minio_data:/data
+    networks:
+      - adwise_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  adwise_network:
+    driver: bridge
+    name: adwise_dev_network
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  postgres_data:
+    name: adwise_postgres_data_dev
+  mongodb_data:
+    name: adwise_mongodb_data_dev
+  redis_data:
+    name: adwise_redis_data_dev
+  pgadmin_data:
+    name: adwise_pgadmin_data_dev
+  prometheus_data:
+    name: adwise_prometheus_data_dev
+  grafana_data:
+    name: adwise_grafana_data_dev
+  rabbitmq_data:
+    name: adwise_rabbitmq_data_dev
+  minio_data:
+    name: adwise_minio_data_dev
+  adwise_prometheus_config_dev:
+    external: true
+  adwise_grafana_config_dev:
+    external: true

@@ -1,0 +1,41 @@
+# AdWise AI Digital Marketing Campaign Builder - Grafana Datasources Configuration
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "5s"
+      queryTimeout: "60s"
+      httpMethod: "POST"
+    secureJsonData: {}
+
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: adwise_campaigns
+    user: adwise_user
+    secureJsonData:
+      password: adwise_dev_password_2024
+    jsonData:
+      sslmode: "disable"
+      maxOpenConns: 0
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+      postgresVersion: 1500
+      timescaledb: false
+
+  - name: MongoDB
+    type: grafana-mongodb-datasource
+    access: proxy
+    url: mongodb://admin:admin_password_2024@mongodb:27017/adwise_campaigns
+    jsonData:
+      authSource: "admin"
+      ssl: false
+    editable: true
