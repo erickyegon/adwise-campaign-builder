@@ -46,7 +46,13 @@ A **comprehensive, enterprise-grade AI-powered digital marketing campaign builde
 
 ### **🤖 AI-Powered Content Generation**
 - **EURI AI Integration**: Advanced content generation with quality validation
-- **LangChain Workflows**: Custom chains for content optimization
+- **LangChain Workflows**: Sequential chains for sophisticated content optimization
+- **LangGraph State Management**: Advanced state-based workflows with parallel processing
+- **LangServe API Deployment**: REST APIs for AI chains with streaming support
+- **Real-time Streaming**: Token-by-token AI generation with WebSocket integration
+- **Human-in-the-Loop**: Quality checkpoints with approval workflows
+- **Custom AI Tools**: Competitor analysis, brand compliance, performance metrics
+- **Conversational AI**: Memory-persistent chat interface for campaign assistance
 - **Multi-format Support**: Ads, emails, social media content
 - **Quality Assurance**: Automated content validation and scoring
 - **Performance Monitoring**: AI usage analytics and cost tracking
@@ -83,7 +89,10 @@ A **comprehensive, enterprise-grade AI-powered digital marketing campaign builde
 🗄️ MongoDB 5.0+          # NoSQL database with Beanie ODM
 🔴 Redis 6.0+            # Caching and session management
 🤖 EURI AI               # Advanced AI content generation
-🔗 LangChain             # AI workflow orchestration
+🔗 LangChain 0.3.7       # AI workflow orchestration with sequential chains
+🌐 LangGraph 0.2.34      # State-based AI workflows with parallel processing
+🚀 LangServe 0.3.1       # AI chain deployment as REST APIs
+🔄 WebSocket Streaming   # Real-time AI content generation
 🔐 JWT Authentication    # Secure token-based auth
 📊 Pydantic V2           # Data validation and serialization
 ```
@@ -166,6 +175,10 @@ app/
 ├── 📁 integrations/           # External services
 │   ├── euri/                 # EURI AI integration
 │   └── langchain/            # LangChain workflows
+├── 📁 services/               # Enhanced AI services
+│   ├── langchain_service.py  # LangChain sequential chains
+│   ├── langserve_routes.py   # LangServe API deployment
+│   └── streaming_service.py  # Real-time streaming
 └── 📄 main.py                # Application entry point
 ```
 

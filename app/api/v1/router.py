@@ -28,6 +28,12 @@ except ImportError:
     AUTH_AVAILABLE = False
 
 try:
+    from .langchain_endpoints import router as langchain_router
+    LANGCHAIN_AVAILABLE = True
+except ImportError:
+    LANGCHAIN_AVAILABLE = False
+
+try:
     from .users import router as users_router
     USERS_AVAILABLE = True
 except ImportError:
@@ -125,6 +131,13 @@ if AI_AVAILABLE:
         ai_router,
         prefix="/ai",
         tags=["AI Services"]
+    )
+
+if LANGCHAIN_AVAILABLE:
+    api_router.include_router(
+        langchain_router,
+        prefix="/langchain",
+        tags=["Advanced AI - LangChain/LangGraph/LangServe"]
     )
 
 if ANALYTICS_AVAILABLE:

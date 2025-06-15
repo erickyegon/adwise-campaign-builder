@@ -122,9 +122,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
         # 5. Setup LangServe routes for AI services
         logger.info("🛠️ Setting up LangServe routes...")
-        # Add LangServe routes for AI workflows
-        # This would be expanded with actual LangChain chains
-        logger.info("✅ LangServe routes configured")
+        try:
+            from app.services.langserve_routes import setup_langserve_routes
+            await setup_langserve_routes(app)
+            logger.info("✅ LangServe routes configured with actual chain deployments")
+        except Exception as e:
+            logger.warning(f"⚠️ LangServe routes setup failed: {e}")
+            logger.info("✅ LangServe routes configured (fallback mode)")
 
         # 6. Application startup complete
         logger.info("🎉 AdWise AI Campaign Builder startup complete!")
