@@ -409,8 +409,8 @@ if __name__ == "__main__":
         "app.main:app",
         host=settings.app.HOST,
         port=settings.app.PORT,
-        reload=settings.app.is_development,
-        workers=1 if settings.app.is_development else settings.app.WORKERS,
+        reload=settings.is_development,
+        workers=1 if settings.is_development else settings.app.WORKERS,
         log_level=settings.app.LOG_LEVEL.lower(),
         access_log=True,
     )

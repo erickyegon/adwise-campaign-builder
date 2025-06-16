@@ -262,16 +262,10 @@ async def create_conversational_chain() -> Runnable:
         euri_client = await get_euri_client()
         llm = euri_client._get_langchain_llm()
 
-        # Memory for conversation history
-        memory = ConversationBufferWindowMemory(
-            k=10,  # Keep last 10 exchanges
-            return_messages=True,
-            memory_key="chat_history"
-        )
-
+        # Create a simple chain without ConversationChain to avoid input variable issues
         prompt = ChatPromptTemplate.from_messages([
             ("system", """You are AdWise AI, an intelligent digital marketing assistant.
-            
+
             You help users create, optimize, and manage their digital marketing campaigns.
             You have expertise in:
             - Campaign strategy and planning
@@ -280,18 +274,35 @@ async def create_conversational_chain() -> Runnable:
             - Budget allocation and optimization
             - Performance analysis and insights
             - Multi-channel marketing coordination
-            
+
             Be helpful, professional, and provide actionable insights.
+
+            Previous conversation history: {chat_history}
             """),
-            MessagesPlaceholder(variable_name="chat_history"),
             ("human", "{message}")
         ])
 
-        chain = ConversationChain(
-            llm=llm,
-            prompt=prompt,
-            memory=memory,
-            verbose=True
+        # Create a simple chain that handles conversation context
+        def format_chat_history(messages):
+            if not messages:
+                return "No previous conversation."
+
+            formatted = []
+            for msg in messages[-10:]:  # Keep last 10 messages
+                if hasattr(msg, 'content'):
+                    role = "Human" if msg.__class__.__name__ == "HumanMessage" else "Assistant"
+                    formatted.append(f"{role}: {msg.content}")
+            return "\n".join(formatted)
+
+        # Create chain with proper input handling
+        chain = (
+            {
+                "message": lambda x: x["message"],
+                "chat_history": lambda x: format_chat_history(x.get("chat_history", []))
+            }
+            | prompt
+            | llm
+            | StrOutputParser()
         )
 
         return chain

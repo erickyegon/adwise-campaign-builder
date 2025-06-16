@@ -13,7 +13,7 @@ import {
   UserPlus,
   Settings,
 } from 'lucide-react';
-import { apiEndpoints } from '../lib/api';
+import { api } from '../lib/api';
 
 const roleIcons = {
   owner: Crown,
@@ -129,7 +129,7 @@ export function Teams() {
 
   const { data: teams, isLoading } = useQuery({
     queryKey: ['teams', { search: searchTerm }],
-    queryFn: () => apiEndpoints.teams.list({
+    queryFn: () => api.getTeams({
       search: searchTerm || undefined,
     }),
   });

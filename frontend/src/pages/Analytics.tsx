@@ -27,7 +27,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { apiEndpoints } from '../lib/api';
+import { api } from '../lib/api';
 
 const timeRanges = [
   { label: 'Last 7 days', value: 'last_7_days' },
@@ -67,7 +67,7 @@ export function Analytics() {
 
   const { data: analyticsData, isLoading } = useQuery({
     queryKey: ['analytics', 'overview', timeRange],
-    queryFn: () => apiEndpoints.analytics.overview(),
+    queryFn: () => api.getAnalytics(),
   });
 
   const metrics = [

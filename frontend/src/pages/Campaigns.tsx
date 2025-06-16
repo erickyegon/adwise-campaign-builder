@@ -14,7 +14,7 @@ import {
   TrendingUp,
   DollarSign,
 } from 'lucide-react';
-import { apiEndpoints } from '../lib/api';
+import { api } from '../lib/api';
 
 const statusColors = {
   active: 'bg-green-100 text-green-800',
@@ -30,7 +30,7 @@ export function Campaigns() {
 
   const { data: campaigns, isLoading, error } = useQuery({
     queryKey: ['campaigns', { search: searchTerm, status: statusFilter }],
-    queryFn: () => apiEndpoints.campaigns.list({
+    queryFn: () => api.getCampaigns({
       search: searchTerm || undefined,
       status: statusFilter !== 'all' ? statusFilter : undefined,
     }),

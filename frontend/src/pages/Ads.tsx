@@ -16,7 +16,7 @@ import {
   Facebook,
   Instagram,
 } from 'lucide-react';
-import { apiEndpoints } from '../lib/api';
+import { api } from '../lib/api';
 
 const statusColors = {
   active: 'bg-green-100 text-green-800',
@@ -108,7 +108,7 @@ export function Ads() {
 
   const { data: ads, isLoading } = useQuery({
     queryKey: ['ads', { search: searchTerm, status: statusFilter, platform: platformFilter }],
-    queryFn: () => apiEndpoints.ads.list({
+    queryFn: () => api.getAds({
       search: searchTerm || undefined,
       status: statusFilter !== 'all' ? statusFilter : undefined,
       platform: platformFilter !== 'all' ? platformFilter : undefined,
