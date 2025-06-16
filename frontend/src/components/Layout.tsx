@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   BarChart3,
-  Campaign,
+  Megaphone,
   Users,
   Settings,
   FileText,
@@ -22,7 +22,7 @@ interface LayoutProps {
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
-  { name: 'Campaigns', href: '/campaigns', icon: Campaign },
+  { name: 'Campaigns', href: '/campaigns', icon: Megaphone },
   { name: 'Ads', href: '/ads', icon: Target },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Teams', href: '/teams', icon: Users },
@@ -37,45 +37,47 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Mobile sidebar */}
-      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white shadow-xl">
+      <div className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+        <div className={`fixed inset-y-0 left-0 flex w-64 flex-col bg-white/95 backdrop-blur-xl shadow-2xl transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600">
-                <Campaign className="h-5 w-5 text-white" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg">
+                <Megaphone className="h-6 w-6 text-white" />
               </div>
-              <span className="ml-2 text-lg font-semibold text-gray-900">AdWise AI</span>
+              <span className="ml-3 text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">AdWise AI</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="rounded-md p-2 text-gray-400 hover:text-gray-500"
+              className="rounded-xl p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-200"
             >
               <X className="h-6 w-6" />
             </button>
           </div>
-          <nav className="flex-1 space-y-1 px-2 py-4">
-            {navigation.map((item) => {
+          <nav className="flex-1 space-y-2 px-3 py-6">
+            {navigation.map((item, index) => {
               const isActive = location.pathname === item.href;
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`group flex items-center rounded-md px-2 py-2 text-sm font-medium ${
-                    isActive
-                      ? 'bg-primary-100 text-primary-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                  className={`group flex items-center rounded-xl px-3 py-3 text-sm font-semibold transition-all duration-200 ${isActive
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transform scale-105'
+                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 hover:transform hover:scale-105'
+                    }`}
                   onClick={() => setSidebarOpen(false)}
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <item.icon
-                    className={`mr-3 h-5 w-5 ${
-                      isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'
-                    }`}
+                    className={`mr-3 h-5 w-5 transition-all duration-200 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-blue-500'
+                      }`}
                   />
                   {item.name}
+                  {isActive && (
+                    <div className="ml-auto h-2 w-2 rounded-full bg-white animate-pulse" />
+                  )}
                 </Link>
               );
             })}
@@ -84,34 +86,39 @@ export function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-col flex-grow border-r border-gray-200 bg-white pt-5">
-          <div className="flex items-center flex-shrink-0 px-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600">
-              <Campaign className="h-5 w-5 text-white" />
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+        <div className="flex flex-col flex-grow bg-white/95 backdrop-blur-xl border-r border-gray-200/50 pt-6 shadow-xl">
+          <div className="flex items-center flex-shrink-0 px-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg">
+              <Megaphone className="h-7 w-7 text-white" />
             </div>
-            <span className="ml-2 text-lg font-semibold text-gray-900">AdWise AI</span>
+            <span className="ml-4 text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">AdWise AI</span>
           </div>
-          <div className="mt-5 flex flex-grow flex-col">
-            <nav className="flex-1 space-y-1 px-2 pb-4">
-              {navigation.map((item) => {
+          <div className="mt-8 flex flex-grow flex-col">
+            <nav className="flex-1 space-y-3 px-4 pb-6">
+              {navigation.map((item, index) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center rounded-md px-2 py-2 text-sm font-medium ${
-                      isActive
-                        ? 'bg-primary-100 text-primary-900'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                    className={`group flex items-center rounded-2xl px-4 py-4 text-sm font-semibold transition-all duration-300 ${isActive
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl transform scale-105'
+                      : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 hover:transform hover:scale-105 hover:shadow-lg'
+                      }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <item.icon
-                      className={`mr-3 h-5 w-5 ${
-                        isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'
-                      }`}
+                      className={`mr-4 h-6 w-6 transition-all duration-300 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-blue-500'
+                        }`}
                     />
                     {item.name}
+                    {isActive && (
+                      <div className="ml-auto flex items-center space-x-2">
+                        <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                        <div className="h-1 w-6 rounded-full bg-white/30" />
+                      </div>
+                    )}
                   </Link>
                 );
               })}
@@ -121,12 +128,12 @@ export function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-72">
         {/* Top navigation */}
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-40 flex h-20 shrink-0 items-center gap-x-4 border-b border-white/20 bg-white/80 backdrop-blur-xl px-4 shadow-lg sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
-            className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+            className="-m-2.5 p-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-6 w-6" />

@@ -67,35 +67,51 @@ export function Dashboard() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-2 text-sm text-gray-700">
-          Welcome back! Here's what's happening with your campaigns today.
-        </p>
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-3xl blur-3xl"></div>
+        <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-xl">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Dashboard
+          </h1>
+          <p className="mt-3 text-lg text-gray-600 font-medium">
+            Welcome back! Here's what's happening with your campaigns today.
+          </p>
+          <div className="mt-4 flex items-center space-x-2">
+            <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-green-600 font-semibold">All systems operational</span>
+          </div>
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.name} className="card p-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat, index) => (
+          <div
+            key={stat.name}
+            className="card p-8 group hover:scale-105 transition-all duration-300"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <stat.icon className="h-8 w-8 text-primary-600" />
+                <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                  <stat.icon className="h-8 w-8 text-white" />
+                </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-6 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">{stat.name}</dt>
-                  <dd className="flex items-baseline">
-                    <div className="text-2xl font-semibold text-gray-900">{stat.value}</div>
+                  <dt className="text-sm font-semibold text-gray-500 truncate uppercase tracking-wider">{stat.name}</dt>
+                  <dd className="flex items-baseline mt-2">
+                    <div className="text-3xl font-bold text-gray-900">{stat.value}</div>
                     <div
-                      className={`ml-2 flex items-baseline text-sm font-semibold ${
-                        stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                      }`}
+                      className={`ml-3 flex items-center text-sm font-bold px-2 py-1 rounded-full ${stat.changeType === 'positive'
+                        ? 'text-green-700 bg-green-100'
+                        : 'text-red-700 bg-red-100'
+                        }`}
                     >
-                      <TrendingUp className="h-4 w-4 flex-shrink-0 self-center" />
-                      <span className="ml-1">{stat.change}</span>
+                      <TrendingUp className="h-4 w-4 flex-shrink-0 mr-1" />
+                      <span>{stat.change}</span>
                     </div>
                   </dd>
                 </dl>
